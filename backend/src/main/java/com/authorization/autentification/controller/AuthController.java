@@ -31,10 +31,10 @@ public class AuthController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestHeader("Authorization") String authorization) {
-        String refreshToken = authorization.substring(7);
-        return ResponseEntity.ok(authService.refresh(refreshToken));
-    }
+    public ResponseEntity<AuthResponse> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken,
+                                                HttpServletResponse response) {
+        return ResponseEntity.ok(authService.refresh(refreshToken, response));
+    }    
     @PostMapping("/signOut")
     public ResponseEntity<String> userSignOut(@RequestHeader("Authorization") String authorization){
         String refreshToken=authorization.substring(7);

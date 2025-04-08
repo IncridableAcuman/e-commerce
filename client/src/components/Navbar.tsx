@@ -10,10 +10,11 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const {user}=useAuth();
 
-
   const navigate = useNavigate();
-
-
+  if(user){
+    localStorage.setItem("user",user.username);
+   localStorage.setItem("id",user.id.toString()) 
+  }
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -28,6 +29,8 @@ const Navbar = () => {
       await axiosAPI.post("/auth/signOut");
       toast.success("Successfully signed out.");
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("id");
       navigate("/home");
     } catch (error) {
       toast.error("Something went wrong, please try again later.");
@@ -65,7 +68,7 @@ const Navbar = () => {
               <div className="">
                 <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-200 p-2 rounded transition">
                   <User />
-                  <p>{user?.username || "Username"}</p>
+                  <p>{user?.username || localStorage.getItem("user")}</p>
                 </div>
                 <div className="flex items-center gap-3 mt-3 cursor-pointer hover:bg-gray-200 p-2 rounded transition"
                   onClick={handleSignOut}>

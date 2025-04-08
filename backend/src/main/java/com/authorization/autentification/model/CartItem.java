@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "cart_items")
 @NoArgsConstructor
@@ -25,5 +27,6 @@ public class CartItem implements Serializable {
     private int quantity;
 
     @ManyToOne
+    @JsonBackReference
     private Cart cart;
 }

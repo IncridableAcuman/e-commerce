@@ -2,7 +2,6 @@ package com.authorization.autentification.service;
 import com.authorization.autentification.DTO.AuthRequest;
 import com.authorization.autentification.DTO.AuthResponse;
 import com.authorization.autentification.DTO.SignInRequest;
-import com.authorization.autentification.config.UserAlreadyExistsException;
 import com.authorization.autentification.model.RefreshToken;
 import com.authorization.autentification.model.Role;
 import com.authorization.autentification.model.User;
@@ -51,7 +50,7 @@ public class AuthService {
                 .maxAge(7*24*60*60)
                 .build();
         response.addHeader("Set-Cookie",responseCookie.toString());
-        return new AuthResponse(user.getUsername(),user.getEmail(),jwtUtil.generateToken(user,900000),refreshToken);
+        return new AuthResponse(user.getId(),user.getUsername(),user.getEmail(),jwtUtil.generateToken(user,900000),refreshToken);
     }
 
     @Transactional
@@ -76,48 +75,58 @@ public class AuthService {
                 .maxAge(7*24*60*60)
                 .build();
         response.addHeader("Set-Cookie",responseCookie.toString());
-        return new AuthResponse(user.getUsername(),user.getEmail(),accessToken,refreshToken.getToken());
+        return new AuthResponse(user.getId(),user.getUsername(),user.getEmail(),accessToken,refreshToken.getToken());
     }
     @Transactional
-    public AuthResponse refresh(String refreshToken) {
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new UserAlreadyExistsException("Refresh token is missing");
-        }
-
-        if (!jwtUtil.validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
-        }
-
-        String username;
-        try {
-            username = jwtUtil.extractUsername(refreshToken);
-        } catch (Exception e) {
-            throw new RuntimeException("Could not extract email from token");
-        }
-
-        User user = authRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        RefreshToken savedToken = refreshTokenRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found in database"));
-
-        if (!savedToken.getToken().equals(refreshToken)) {
-            throw new RuntimeException("Refresh token mismatch");
-        }
-
-        if (savedToken.getExpiryDate().before(new Date())) {
-            throw new RuntimeException("Refresh token expired");
-        }
-
-        String newAccessToken = jwtUtil.generateToken(user, 900000);
-        String newRefreshToken = jwtUtil.generateToken(user, 604800000);
-
-        savedToken.setToken(newRefreshToken);
-        savedToken.setExpiryDate(new Date(System.currentTimeMillis() + 604800000));
-        refreshTokenRepository.save(savedToken);
-
-        return new AuthResponse(user.getUsername(), user.getEmail(), newAccessToken, newRefreshToken);
+    public AuthResponse refresh(String refreshToken, HttpServletResponse response) {
+    if (refreshToken == null || refreshToken.isEmpty()) {
+        throw new RuntimeException("Refresh token is missing");
     }
+
+    if (!jwtUtil.validateToken(refreshToken)) {
+        throw new RuntimeException("Invalid refresh token");
+    }
+
+    String username;
+    try {
+        username = jwtUtil.extractUsername(refreshToken);
+    } catch (Exception e) {
+        throw new RuntimeException("Could not extract username from token");
+    }
+
+    User user = authRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    RefreshToken savedToken = refreshTokenRepository.findByUser(user)
+            .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+
+    if (!savedToken.getToken().equals(refreshToken)) {
+        throw new RuntimeException("Refresh token mismatch");
+    }
+
+    if (savedToken.getExpiryDate().before(new Date())) {
+        throw new RuntimeException("Refresh token expired");
+    }
+
+    // Generate new tokens
+    String newAccessToken = jwtUtil.generateToken(user, 900000); // 15 min
+    String newRefreshToken = jwtUtil.generateToken(user, 604800000); // 7 days
+
+    savedToken.setToken(newRefreshToken);
+    savedToken.setExpiryDate(new Date(System.currentTimeMillis() + 604800000));
+    refreshTokenRepository.save(savedToken);
+
+    // Set new refreshToken in cookie
+    ResponseCookie responseCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .maxAge(7 * 24 * 60 * 60)
+            .build();
+    response.addHeader("Set-Cookie", responseCookie.toString());
+
+    return new AuthResponse(user.getId(),user.getUsername(), user.getEmail(), newAccessToken, newRefreshToken);
+}
 
     @Transactional
     public void userSignOut(String refreshToken){

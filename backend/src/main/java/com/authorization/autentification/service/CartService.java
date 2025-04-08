@@ -7,6 +7,8 @@ import com.authorization.autentification.model.User;
 import com.authorization.autentification.repository.AuthRepository;
 import com.authorization.autentification.repository.CartRepository;
 import com.authorization.autentification.repository.ProductRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,7 @@ public class CartService {
     private final ProductRepository productRepository;
     private final AuthRepository authRepository;
 
+    @Transactional
     public Cart addToCart(Long userId,Long productId,int quantity){
         User user=authRepository.findById(userId)//searching user
                 .orElseThrow(()-> new  RuntimeException("User not found"));
@@ -44,6 +47,7 @@ public class CartService {
         return cartRepository.save(cart);
 
     }
+    @Transactional
     public Cart getCartByUser(Long userId){
         User user=authRepository.findById(userId).orElseThrow(()->new RuntimeException(("User not found")));
         return cartRepository.findByUser(user).orElseThrow(()->

@@ -9,6 +9,8 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
@@ -34,5 +36,6 @@ public class User implements Serializable {
     private Role role;
 
     @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Cart cart;
 }

@@ -8,10 +8,12 @@ const UserProducts = () => {
   const {id}=useParams();
   const navigate=useNavigate();
   const [productData,setProductData]=useState<Product[]>([]);
+  const [count,setCount]=useState(0);
   
   const handleProductData = async ()=>{
       try {
         const {data}:{data:Product[]} = await axiosAPI.get("/product/all-products");
+        toast.success("Success")
         setProductData(data);
       } catch (error) {
         toast.error("Something went wrong");
@@ -23,6 +25,15 @@ const UserProducts = () => {
     },[]);
 
 
+    const handleAddToCart=async ()=>{
+      try {
+        const {data}=await axiosAPI.post(`/cart/add?userId=${localStorage.getItem("id")?.toString()}&productId=${id}&quantity=${5}`);
+        console.log(data);
+      } catch (error) {
+        toast.error("Something went wrong");
+        console.log(error);
+      }
+    }
 
   return (
     <>
@@ -49,7 +60,7 @@ const UserProducts = () => {
               >{product.size}</button>
            </div>
            <button className='bg-gray-700 mb-3 text-white px-5 py-2 cursor-pointer uppercase
-            hover:bg-gray-900 transition duration-300'>Add to Cart</button>
+            hover:bg-gray-900 transition duration-300' onClick={handleAddToCart}>Add to Cart</button>
            <hr />
            <div className="text-sm text-gray-500 mt-5">
             <p>100% Original product.</p>
