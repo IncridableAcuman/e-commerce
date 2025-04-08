@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+jwt:
+  secret: your-secure-secret
+  access-time: 900000
+  refresh-time: 604800000
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:3306/postgres
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: abdusharipovizzat03@gmail.com
+    password: zmtp yzzl makp igqv
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  
