@@ -1,15 +1,17 @@
- import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import Footer from "../components/Footer"
 import Navbar from "../components/Navbar"
 import { Trash2 } from "lucide-react";
-
 const Cart = () => {
     const navigate=useNavigate();
+    const data=localStorage.getItem("data");
+    console.log(data?.length)
   return (
     <>
     <Navbar/>
     <div className="container mx-auto py-8 px-3 lg:py-12 lg:px-12">
       <div className="content-auth">
+         
          <div className="flex items-center justify-between border-b border-t py-2">
            {/* content */}
            <div className="flex items-center gap-5">
